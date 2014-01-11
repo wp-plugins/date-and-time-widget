@@ -1,5 +1,5 @@
 === Plugin Name ===
-Contributors: Donna Peplinskie
+Contributors: donnapep
 Tags: date, time, local time, clock, digital clock, widget
 Author URI: http://bookwookie.ca
 Requires at least: 3.5
