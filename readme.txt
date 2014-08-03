@@ -1,10 +1,10 @@
 === Plugin Name ===
-Contributors: donnapep
+Contributors: Donna Peplinskie
 Tags: date, time, local time, clock, digital clock, widget
 Author URI: http://bookwookie.ca
 Requires at least: 3.5
-Tested up to: 3.8
-Stable tag: 1.0.0
+Tested up to: 3.9.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,13 @@ The Date and Time Widget enables you to add a widget to your sidebar for display
 * Customize the font, font size, text color and background color.
 
 = About Me =
-I am a full-time front-end Web Developer. I build WordPress plugins and run the [Book Wookie](http://bookwookie.ca) blog in my free time.
+* I’m a front-end web developer with a fondness for WordPress. I blog about web development at [donnapeplinskie.com](http://donnapeplinskie.com/).
+
+* I’m a developer advocate for [Rise Vision](http://risevision.com/).
+
+* I’m author of the [WordPress Book Review Plugin](http://wordpress.org/plugins/book-review/) and [WordPress Date and Time Widget](http://wordpress.org/plugins/date-and-time-widget/).
+
+* I’m founder and contributor of the [Book Wookie](http://bookwookie.ca) book blog.
 
 == Installation ==
 
@@ -34,5 +40,20 @@ I am a full-time front-end Web Developer. I build WordPress plugins and run the 
 
 == Changelog ==
 
-= 1.0 =
+= 1.1.0 =
+* Added .pot file.
+* Refactored codebase.
+* Fixed issue with duplicate color pickers showing when widget first added to sidebar.
+
+= 1.0.0 =
 * Initial release.
+
+== Upgrade Notice ==
+
+= 1.1.0 =
+Added .pot file.
+Refactored codebase.
+Fixed issue with duplicate color pickers showing when widget first added to sidebar.
+
+= 1.0.0 =
+Initial release.

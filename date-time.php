@@ -1,213 +1,373 @@
 <?php
 /**
- * Plugin Name: Date and Time Widget
- * Description: Widget that displays the local date and/or time.
- * Version: 1.0.0
- * Author: Donna Peplinskie
- * Author URI: http://bookwookie.ca
- * License: GPL v3
- * 
- * Date and Time Widget
- * Copyright (C) 2013, Donna Peplinskie - donnapep@gmail.com
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package   Date_Time
+ * @author    Donna Peplinskie <donnapep@gmail.com>
+ * @license   GPL-2.0+
+ * @link      http://donnapeplinskie.com
+ * @copyright 2014 Donna Peplinskie
+ *
+ * @wordpress-plugin
+ * Plugin Name:       Date and Time Widget
+ * Plugin URI:        http://donnapeplinskie.com/wordpress-date-and-time-widget/
+ * Description:       Widget that displays the local date and/or time.
+ * Version:           1.1.0
+ * Author:            Donna Peplinskie
+ * Author URI:        http://donnapeplinskie.com
+ * Text Domain:       date-time
+ * License:           GPL-2.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * Domain Path:       /languages
+ * GitHub Plugin URI: https://github.com/donnapep/wordpress-date-and-time-widget
  */
 
-function register() {
-    register_widget( 'DateTimeWidget' );
-}
-add_action( 'widgets_init', 'register' );
+class Date_Time extends WP_Widget {
+  /**
+   * Unique identifier for your widget.
+   *
+   *
+   * The variable name is used as the text domain when internationalizing strings
+   * of text. Its value should match the Text Domain file header in the main
+   * widget file.
+   *
+   * @since    1.1.0
+   *
+   * @var      string
+   */
+  protected $widget_slug = 'date-time';
 
-function load_color_picker_style() {
+  /*--------------------------------------------------*/
+  /* Constructor
+  /*--------------------------------------------------*/
+
+  /**
+   * Specifies the classname and description, instantiates the widget,
+   * loads localization files, and includes necessary stylesheets and JavaScript.
+   */
+  public function __construct() {
+    // Load plugin text domain
+    add_action( 'init', array( $this, 'widget_textdomain' ) );
+
+    // Hooks fired when the Widget is activated and deactivated
+    register_activation_hook( __FILE__, array( $this, 'activate' ) );
+    register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
+
+    parent::__construct(
+      $this->get_widget_slug(),
+      __( 'Date and Time', $this->get_widget_slug() ),
+      array(
+        'classname'  => 'widget_date_time',
+        'description' => __( 'Show the local date and/or time.',
+          $this->get_widget_slug() )
+      )
+    );
+
+    // Register admin styles and scripts
+    add_action( 'admin_print_styles', array( $this, 'register_admin_styles' ) );
+    add_action( 'admin_enqueue_scripts', array( $this, 'register_admin_scripts' ) );
+
+    // Register site styles and scripts
+    add_action( 'wp_enqueue_scripts', array( $this, 'register_widget_styles' ) );
+    add_action( 'wp_enqueue_scripts', array( $this, 'register_widget_scripts' ) );
+
+    // Refreshing the widget's cached output with each new post
+    add_action( 'save_post',    array( $this, 'flush_widget_cache' ) );
+    add_action( 'deleted_post', array( $this, 'flush_widget_cache' ) );
+    add_action( 'switch_theme', array( $this, 'flush_widget_cache' ) );
+
+  } // end constructor
+
+
+  /**
+   * Return the widget slug.
+   *
+   * @since    1.0.0
+   *
+   * @return    Plugin slug variable.
+   */
+  public function get_widget_slug() {
+    return $this->widget_slug;
+  }
+
+  /*--------------------------------------------------*/
+  /* Widget API Functions
+  /*--------------------------------------------------*/
+
+  /**
+   * Outputs the content of the widget.
+   *
+   * @param array args  The array of form elements
+   * @param array instance The current instance of the widget
+   */
+  public function widget( $args, $instance ) {
+    // Check if there is a cached output
+    $cache = wp_cache_get( $this->get_widget_slug(), 'widget' );
+
+    if ( !is_array( $cache ) ) {
+      $cache = array();
+    }
+
+    if ( !isset( $args['widget_id'] ) ) {
+      $args['widget_id'] = $this->id;
+    }
+
+    if ( isset( $cache[ $args['widget_id'] ] ) ) {
+      return print $cache[ $args['widget_id'] ];
+    }
+
+    //Widget settings
+    $time_format = $instance['time_format'];
+    $date_format = $instance['date_format'];
+    $font_family = $instance['font_family'];
+    $font_size = $instance['font_size'];
+    $text_color = $instance ['text_color'];
+    $background_color = $instance ['background_color'];
+
+    extract( $args, EXTR_SKIP );
+
+    $widget_string = $before_widget;
+
+    ob_start();
+    include( plugin_dir_path( __FILE__ ) . 'views/widget.php' );
+    $widget_string .= ob_get_clean();
+    $widget_string .= $after_widget;
+
+    $cache[ $args['widget_id'] ] = $widget_string;
+
+    wp_cache_set( $this->get_widget_slug(), $cache, 'widget' );
+
+    print $widget_string;
+
+  } // end widget
+
+
+  public function flush_widget_cache() {
+    wp_cache_delete( $this->get_widget_slug(), 'widget' );
+  }
+  /**
+   * Processes the widget's options to be saved.
+   *
+   * @param   array   new_instance    The new instance of values to be
+   *                                  generated via the update.
+   * @param   array   old_instance    The previous instance of values before
+   *                                  the update.
+   */
+  public function update( $new_instance, $old_instance ) {
+
+    $instance = $old_instance;
+
+    $instance['time_format'] = $new_instance['time_format'];
+    $instance['date_format'] = $new_instance['date_format'];
+    $instance['font_family'] = $new_instance['font_family'];
+    $instance['font_size'] = $new_instance['font_size'];
+    $instance['text_color'] = $new_instance['text_color'];
+    $instance['background_color'] = $new_instance['background_color'];
+
+    return $instance;
+
+  } // end widget
+
+  /**
+   * Generates the administration form for the widget.
+   *
+   * @param   array   instance        The array of keys and values for the
+   *                                  widget.
+   */
+  public function form( $instance ) {
+    // Define default values for variables.
+    $instance = wp_parse_args(
+      (array) $instance,
+      array(
+        'time_format' => '12-hour-seconds',
+        'date_format' => 'long',
+        'font_family' => 'Arial, Arial, Helvetica, sans-serif',
+        'font_size' => '20px',
+        'text_color' => '#000',
+        'background_color' => 'transparent'
+      )
+    );
+
+    // Store the values of the widget in their own variables.
+    $text_color = esc_attr( $instance['text_color'] );
+    $background_color = esc_attr( $instance['background_color'] );
+
+    // Display the admin form
+    include( plugin_dir_path(__FILE__) . 'views/admin.php' );
+  } // end form
+
+  /*--------------------------------------------------*/
+  /* Public Functions
+  /*--------------------------------------------------*/
+
+  /**
+   * Loads the Widget's text domain for localization and translation.
+   */
+  public function widget_textdomain() {
+    load_plugin_textdomain( $this->get_widget_slug(), false,
+      plugin_dir_path( __FILE__ ) . 'lang/' );
+  } // end widget_textdomain
+
+  /**
+   * Fired when the plugin is activated.
+   *
+   * @param    boolean    $network_wide    True if WPMU superadmin uses
+   *                                       "Network Activate" action, false if
+   *                                       WPMU is disabled or plugin is
+   *                                       activated on an individual blog.
+   */
+  public function activate( $network_wide ) {
+    // TODO define activation functionality here
+  } // end activate
+
+ /**
+   * Fired when the plugin is deactivated.
+   *
+   * @since    2.0.0
+   *
+   * @param    boolean    $network_wide    True if WPMU superadmin uses
+   *                                       "Network Deactivate" action, false if
+   *                                       WPMU is disabled or plugin is
+   *                                       deactivated on an individual blog.
+   */
+  public function deactivate( $network_wide ) {
+    // TODO define deactivation functionality here
+  } // end deactivate
+
+  /**
+   * Registers and enqueues admin-specific styles.
+   */
+  public function register_admin_styles() {
     wp_enqueue_style( 'wp-color-picker' );
-}
-function load_color_picker_script() {
-    wp_enqueue_script( 'wp-color-picker' );
-}
-add_action( 'admin_print_scripts-widgets.php', 'load_color_picker_script' );
-add_action( 'admin_print_styles-widgets.php', 'load_color_picker_style' );
+    wp_enqueue_style( $this->get_widget_slug().'-admin-styles', plugins_url(
+      'css/admin.css', __FILE__ ) );
+  } // end register_admin_styles
 
-class DateTimeWidget extends WP_Widget {
-    function __construct() {
-	parent::__construct(
-	    'date_time', // Base ID
-	    __( 'Date and Time', 'date-time' ), // Name
-	    array( 'description' => __( 'Show the local date and time.', 'date-time' ), )
-	); 
-	
-	wp_register_style( 'date-time-style', plugins_url( 'css/style.css', __FILE__ ) );
-	wp_enqueue_style( 'date-time-style' );
-	wp_enqueue_script( 'date-time', plugins_url( '/js/date-time.js', __FILE__ ) );
-    } 
-    
-    /* Show the widget. */
-    function widget( $args, $instance ) {
-	extract( $args );
-	
-	$widget_id = $args['widget_id'];
+  /**
+   * Registers and enqueues admin-specific JavaScript.
+   */
+  public function register_admin_scripts() {
+    wp_enqueue_script( $this->get_widget_slug().'-admin-script', plugins_url(
+      'js/admin.js', __FILE__ ), array('jquery', 'wp-color-picker') );
+  } // end register_admin_scripts
 
-	//Widget settings
-	$time_format = $instance[ 'time_format' ];
-	$date_format = $instance[ 'date_format' ];
-	$font_family = $instance[ 'font_family' ];
-	$font_size = $instance[ 'font_size' ];
-	$text_color = $instance [ 'text_color' ];
-	$background_color = $instance [ 'background_color' ];
+  /**
+   * Registers and enqueues widget-specific styles.
+   */
+  public function register_widget_styles() {
+    wp_enqueue_style( $this->get_widget_slug().'-widget-styles', plugins_url(
+      'css/widget.css', __FILE__ ) );
+  } // end register_widget_styles
 
-	echo $before_widget;
-	?>
-	
-	<div class="date-time" style="color: <?php echo $text_color ?>; background-color: <?php echo $background_color ?>; font-family: <?php echo $font_family ?>; font-size: <?php echo $font_size ?>;">
-	    <div class="date"></div>
-	    <div class="time"></div>
-	</div>
-    	<script type="text/javascript">
-	    update('<?php echo $widget_id; ?>', '<?php echo $time_format; ?>', '<?php echo $date_format; ?>');
-    	</script>
+  /**
+   * Registers and enqueues widget-specific scripts.
+   */
+  public function register_widget_scripts() {
+    wp_enqueue_script( $this->get_widget_slug().'-script', plugins_url(
+      'js/widget.js', __FILE__ ), array('jquery') );
+  } // end register_widget_scripts
 
-	<?php
-	echo $after_widget;
+  /**
+   * Render options in the Time Format dropdown.
+   *
+   * @since     1.1.0
+   */
+  public function render_time_format( $instance ) {
+    $formats = array(
+      "none" => "None",
+      "12-hour" => date("g:i A", current_time( 'timestamp', 0 ) ),
+      "12-hour-seconds" => date("g:i:s A", current_time( 'timestamp', 0 ) ),
+      "24-hour" => date("G:i", current_time( 'timestamp', 0 ) ),
+      "24-hour-seconds" => date("G:i:s", current_time( 'timestamp', 0 ) ),
+    );
+
+    foreach( $formats as $key => $value ) {
+      $selected = ( $instance['time_format'] == $key ) ?
+        'selected="selected"' : '';
+      echo '<option value="' . $key . '" ' . $selected . '>' . $value .
+        '</option>';
     }
-    
-    /* Show the widget's settings. */
-    function form( $instance ) { ?>
-	<?php //Set up some default widget settings.
-	$defaults = array(
-	'time_format' => '12-hour-seconds',
-	'date_format' => 'long',
-	'font_family' => 'Arial, Arial, Helvetica, sans-serif',
-	'font_size' => '20px',
-	'text_color' => '#000',
-	'background_color' => 'transparent'
-	);
-	$time_formats = array(
-	"none" => "None",
-	"12-hour" => date("g:i A", current_time( 'timestamp', 0 ) ),
-	"12-hour-seconds" => date("g:i:s A", current_time( 'timestamp', 0 ) ),
-	"24-hour" => date("G:i", current_time( 'timestamp', 0 ) ),
-	"24-hour-seconds" => date("G:i:s", current_time( 'timestamp', 0 ) ),
-	);
-	$date_formats = array(
-	"none" => "None",
-	"short" => date( "n/j/Y", current_time( 'timestamp', 0 ) ),
-	"european" => date( "j/n/Y", current_time( 'timestamp', 0 ) ),
-	"medium" => date( "M j Y", current_time( 'timestamp', 0 ) ),
-	"long" => date( "F j, Y", current_time( 'timestamp', 0 ) ),
-	);
-	$font_families = array(
-	"Arial, Arial, Helvetica, sans-serif" => "Arial",
-	"Comic Sans MS, Comic Sans MS, cursive" => "Comic Sans MS",
-	"Courier New, Courier New, Courier, monospace" => "Courier New",
-	"Georgia, Georgia, serif" => "Georgia",
-	"Lucida Sans Unicode, Lucida Grande, sans-serif" => "Lucida Sans Unicode",
-	"Tahoma, Geneva, sans-serif" => "Tahoma",
-	"Times New Roman, Times, serif" => "Times New Roman",
-	"Trebuchet MS, Helvetica, sans-serif" => "Trebuchet MS",
-	"Verdana, Verdana, Geneva, sans-serif" => "Verdana",
-	);
-	$font_sizes = array(
-	"8px" => "8",
-	"9px" => "9",
-	"10px" => "10",
-	"11px" => "11",
-	"12px" => "12",
-	"14px" => "14",
-	"16px" => "16",
-	"18px" => "18",
-	"20px" => "20",
-	"22px" => "22",
-	"24px" => "24",
-	"26px" => "26",
-	"28px" => "28",
-	"36px" => "36",
-	"48px" => "48",
-	"72px" => "72",
-	);
-	$instance = wp_parse_args( (array) $instance, $defaults ); ?>
-	
-	<script>
-	    jQuery(document).ready(function($) {
-		/* Duplicate color pickers are shown when widget first added to sidebar. */
-		$(document).ajaxComplete(function() {
-		    $('.color-picker').wpColorPicker();
-		});
-	    });
-        </script>
-	
-	<p>
-	    <label for="<?php echo $this->get_field_id( 'time_format' ); ?>"><?php _e( 'Time Format:', 'date-time' ); ?></label>
-	    <select id="<?php echo $this->get_field_id( 'time_format' ); ?>" name="<?php echo $this->get_field_name( 'time_format' ); ?>" class="widefat">
-	    
-	    <?php foreach( $time_formats as $key => $value ) {
-		$selected = ( $instance[ 'time_format' ] == $key ) ? 'selected="selected"' : '';
-		echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
-	    } ?>
-	    </select>
-	</p>
-	<p>
-	    <label for="<?php echo $this->get_field_id( 'date_format' ); ?>"><?php _e( 'Date Format:', 'date-time' ); ?></label>
-	    <select id="<?php echo $this->get_field_id( 'date_format' ); ?>" name="<?php echo $this->get_field_name( 'date_format' ); ?>" class="widefat">
-	    
-	    <?php foreach( $date_formats as $key => $value ) {
-		$selected = ( $instance[ 'date_format' ] == $key ) ? 'selected="selected"' : '';
-		echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
-	    } ?>
-	    </select>
-	</p>
-	<p>
-	    <label for="<?php echo $this->get_field_id( 'font_family' ); ?>"><?php _e( 'Font Family:', 'date-time' ); ?></label>
-	    <select id="<?php echo $this->get_field_id( 'font_family' ); ?>" name="<?php echo $this->get_field_name( 'font_family' ); ?>" class="widefat">
-	    
-	    <?php foreach( $font_families as $key => $value ) {
-		$selected = ( $instance[ 'font_family' ] == $key ) ? 'selected="selected"' : '';
-		echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
-	    } ?>
-	    </select>
-	</p>
-	<p>
-	    <label for="<?php echo $this->get_field_id( 'font_size' ); ?>"><?php _e( 'Font Size:', 'date-time' ); ?></label>
-	    <select id="<?php echo $this->get_field_id( 'font_size' ); ?>" name="<?php echo $this->get_field_name( 'font_size' ); ?>">
-	    
-	    <?php foreach( $font_sizes as $key => $value ) {
-		$selected = ( $instance[ 'font_size' ] == $key ) ? 'selected="selected"' : '';
-		echo '<option value="' . $key . '" ' . $selected . '>' . $value . '</option>';
-	    } ?>
-	    </select>
-	</p>
-	<p>
-	    <label for="<?php echo $this->get_field_id( 'text_color' ); ?>"><?php _e( 'Text Color', 'date-time' ) ?>:</label>
-	    <input id="<?php echo $this->get_field_id( 'text_color' ); ?>"  name="<?php echo $this->get_field_name( 'text_color' ); ?>" type="text" value="<?php echo esc_attr( $instance[ 'text_color' ] ); ?>" class="color-picker" />
-	</p>
-	<p>
-	    <label for="<?php echo $this->get_field_id( 'background_color' ); ?>"><?php _e( 'Background Color', 'date-time' ) ?>:</label>
-	    <input id="<?php echo $this->get_field_id( 'background_color' ); ?>"  name="<?php echo $this->get_field_name( 'background_color' ); ?>" type="text" value="<?php echo esc_attr( $instance[ 'background_color' ] ); ?>" class="color-picker" />
-	</p>
-    <?php
-    }
-    
-    //Save the widget's settings.
-    function update( $new_instance, $old_instance ) {
-	$instance = $old_instance;
+  }
 
-	$instance[ 'time_format' ] = $new_instance[ 'time_format' ];
-	$instance[ 'date_format' ] = $new_instance[ 'date_format' ];
-	$instance[ 'font_family' ] = $new_instance[ 'font_family' ];
-	$instance[ 'font_size' ] = $new_instance[ 'font_size' ];
-	$instance[ 'text_color' ] = $new_instance[ 'text_color' ];
-	$instance[ 'background_color' ] = $new_instance[ 'background_color' ];
+  /**
+   * Render options in the Date Format dropdown.
+   *
+   * @since     1.1.0
+   */
+  public function render_date_format( $instance ) {
+    $formats = array(
+      "none" => "None",
+      "short" => date( "n/j/Y", current_time( 'timestamp', 0 ) ),
+      "european" => date( "j/n/Y", current_time( 'timestamp', 0 ) ),
+      "medium" => date( "M j Y", current_time( 'timestamp', 0 ) ),
+      "long" => date( "F j, Y", current_time( 'timestamp', 0 ) ),
+    );
 
-	return $instance;
+    foreach( $formats as $key => $value ) {
+      $selected = ( $instance['date_format'] == $key ) ?
+        'selected="selected"' : '';
+      echo '<option value="' . $key . '" ' . $selected . '>' . $value .
+        '</option>';
     }
-}
-?>
+  }
+
+  /**
+   * Render options in the Font Family dropdown.
+   *
+   * @since     1.1.0
+   */
+  public function render_font_family( $instance ) {
+    $font_families = array(
+      "Arial, Arial, Helvetica, sans-serif" => "Arial",
+      "Comic Sans MS, Comic Sans MS, cursive" => "Comic Sans MS",
+      "Courier New, Courier New, Courier, monospace" => "Courier New",
+      "Georgia, Georgia, serif" => "Georgia",
+      "Lucida Sans Unicode, Lucida Grande, sans-serif" => "Lucida Sans Unicode",
+      "Tahoma, Geneva, sans-serif" => "Tahoma",
+      "Times New Roman, Times, serif" => "Times New Roman",
+      "Trebuchet MS, Helvetica, sans-serif" => "Trebuchet MS",
+      "Verdana, Verdana, Geneva, sans-serif" => "Verdana",
+    );
+
+    foreach( $font_families as $key => $value ) {
+      $selected = ( $instance['font_family'] == $key ) ?
+        'selected="selected"' : '';
+      echo '<option value="' . $key . '" ' . $selected . '>' . $value .
+        '</option>';
+    }
+  }
+
+  /**
+   * Render options in the Font Size dropdown.
+   *
+   * @since     1.1.0
+   */
+  public function render_font_size( $instance ) {
+    $font_sizes = array(
+      "8px" => "8",
+      "9px" => "9",
+      "10px" => "10",
+      "11px" => "11",
+      "12px" => "12",
+      "14px" => "14",
+      "16px" => "16",
+      "18px" => "18",
+      "20px" => "20",
+      "22px" => "22",
+      "24px" => "24",
+      "26px" => "26",
+      "28px" => "28",
+      "36px" => "36",
+      "48px" => "48",
+      "72px" => "72",
+    );
+
+    foreach( $font_sizes as $key => $value ) {
+      $selected = ( $instance['font_size'] == $key ) ?
+        'selected="selected"' : '';
+      echo '<option value="' . $key . '" ' . $selected . '>' . $value .
+        '</option>';
+    }
+  }
+} // end class
+
+add_action( 'widgets_init', create_function( '',
+  'register_widget("Date_Time");' ) );
