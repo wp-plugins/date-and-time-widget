@@ -1,7 +1,8 @@
 === Plugin Name ===
 Contributors: Donna Peplinskie
 Tags: date, time, local time, clock, digital clock, widget
-Author URI: http://bookwookie.ca
+Author URI: http://donnapeplinskie.com
+Plugin URI: http://donnapeplinskie.com/wordpress-date-and-time-widget/
 Requires at least: 3.5
 Tested up to: 3.9.1
 Stable tag: 1.1.0
@@ -19,11 +20,8 @@ The Date and Time Widget enables you to add a widget to your sidebar for display
 
 = About Me =
 * I’m a front-end web developer with a fondness for WordPress. I blog about web development at [donnapeplinskie.com](http://donnapeplinskie.com/).
-
 * I’m a developer advocate for [Rise Vision](http://risevision.com/).
-
 * I’m author of the [WordPress Book Review Plugin](http://wordpress.org/plugins/book-review/) and [WordPress Date and Time Widget](http://wordpress.org/plugins/date-and-time-widget/).
-
 * I’m founder and contributor of the [Book Wookie](http://bookwookie.ca) book blog.
 
 == Installation ==
