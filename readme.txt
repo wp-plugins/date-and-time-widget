@@ -1,10 +1,9 @@
 === Plugin Name ===
 Contributors: Donna Peplinskie
-Tags: date, time, local time, clock, digital clock, widget
+Tags: adopt-me, date, time, local time, clock, digital clock, widget
 Author URI: http://donnapeplinskie.com
-Plugin URI: http://donnapeplinskie.com/wordpress-date-and-time-widget/
 Requires at least: 3.5
-Tested up to: 3.9.1
+Tested up to: 4.1.1
 Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -19,12 +18,20 @@ The Date and Time Widget enables you to add a widget to your sidebar for display
 * Customize the font, font size, text color and background color.
 
 = About Me =
-* I’m a front-end web developer with a fondness for WordPress. I blog about web development at [donnapeplinskie.com](http://donnapeplinskie.com/).
-* I’m a developer advocate for [Rise Vision](http://risevision.com/).
-* I’m author of the [WordPress Book Review Plugin](http://wordpress.org/plugins/book-review/) and [WordPress Date and Time Widget](http://wordpress.org/plugins/date-and-time-widget/).
+* I’m the founder of [WPReviewPlugins.com](http://wpreviewplugins.com/).
+* I’m a front-end developer & developer advocate for [Rise Vision](http://risevision.com/).
 * I’m founder and contributor of the [Book Wookie](http://bookwookie.ca) book blog.
+* I blog about web and professional development at [donnapeplinskie.com](http://donnapeplinskie.com/).
 
 == Installation ==
+
+1. In WordPress, go to *Plugins* > *Add Plugins*.
+1. Search for *date and time widget*.
+1. Click on *Install Now*.
+1. Click on *Activate Plugin*.
+1. In the *Appearance* > *Widgets* menu, drag the *Date and Time* widget to your sidebar and customize the settings.
+
+OR
 
 1. Download the plugin and extract it.
 1. Upload the `date-time` folder to the `/wp-content/plugins/` directory on your server.
