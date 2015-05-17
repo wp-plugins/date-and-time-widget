@@ -1,6 +1,6 @@
 === Plugin Name ===
-Contributors: donnapep
-Tags: adopt-me, date, time, local time, clock, digital clock, widget
+Contributors: donnapep,dabesa
+Tags: date, time, local time, clock, digital clock, widget
 Author URI: http://donnapeplinskie.com
 Requires at least: 3.5
 Tested up to: 4.1.1
