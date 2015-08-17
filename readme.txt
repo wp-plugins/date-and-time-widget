@@ -1,6 +1,6 @@
 === Plugin Name ===
-Contributors: donnapep
-Tags: adopt-me, date, time, local time, clock, digital clock, widget
+Contributors: donnapep, dabesa
+Tags: date, time, local time, clock, digital clock, widget
 Author URI: http://donnapeplinskie.com
 Requires at least: 3.5
 Tested up to: 4.1.1
@@ -17,11 +17,17 @@ The Date and Time Widget enables you to add a widget to your sidebar for display
 * Choice of formats for both date and time.
 * Customize the font, font size, text color and background color.
 
-= About Me =
+= About Us =
+Donna:
 * I’m the founder of [WPReviewPlugins.com](http://wpreviewplugins.com/).
 * I’m a front-end developer & developer advocate for [Rise Vision](http://risevision.com/).
 * I’m founder and contributor of the [Book Wookie](http://bookwookie.ca) book blog.
 * I blog about web and professional development at [donnapeplinskie.com](http://donnapeplinskie.com/).
+
+Daniele:
+* WordPress freelancer at [ITVC.net](http://itvc.net/). 
+* I blog at [DanieleBesana.com](http://www.danielebesana.com/).
+
 
 == Installation ==
 
